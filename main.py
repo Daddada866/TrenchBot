@@ -271,3 +271,42 @@ def trench_place_order(
     if order_type == OrderType.MARKET:
         _trench_fill_order(order)
     return order
+
+
+def _trench_fill_order(order: TrenchOrder) -> None:
+    if order.status != OrderStatus.PENDING:
+        return
+    price = _trench_get_mock_price(order.pair)
+    order.status = OrderStatus.FILLED
+    order.filled_amount = order.amount_base
+    order.fill_price = price
+    order.updated_at = time.time()
+    _trench_ensure_positions(order.user_id)
+    pos = next(
+        (p for p in _trench_positions[order.user_id] if p.pair == order.pair and p.side == order.side),
+        None,
+    )
+    if pos:
+        total_size = pos.size + order.amount_base
+        pos.entry_price = (pos.entry_price * pos.size + price * order.amount_base) // total_size
+        pos.size = total_size
+        pos.updated_at = time.time()
+    else:
+        _trench_positions[order.user_id].append(
+            TrenchPosition(
+                user_id=order.user_id,
+                pair=order.pair,
+                side=order.side,
+                size=order.amount_base,
+                entry_price=price,
+                updated_at=time.time(),
+            )
+        )
+    bal = _trench_get_or_create_balance(order.user_id)
+    if order.side == OrderSide.BUY:
+        bal.base_balance += order.amount_base
+        bal.quote_balance -= order.amount_quote
+    else:
+        bal.quote_balance += order.amount_quote
+        bal.base_balance -= order.amount_base
+    bal.updated_at = time.time()
