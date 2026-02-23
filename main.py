@@ -154,3 +154,42 @@ class TrenchOrder:
     status: OrderStatus
     created_at: float
     updated_at: float
+    fill_price: Optional[int] = None
+    filled_amount: int = 0
+
+
+@dataclass
+class TrenchPosition:
+    user_id: int
+    pair: str
+    side: OrderSide
+    size: int
+    entry_price: int
+    updated_at: float
+
+
+@dataclass
+class TrenchUserBalance:
+    user_id: int
+    quote_balance: int
+    base_balance: int
+    updated_at: float
+
+
+# ---------------------------------------------------------------------------
+# In-memory state (replace with DB in production)
+# ---------------------------------------------------------------------------
+
+_trench_orders: Dict[str, TrenchOrder] = {}
+_trench_positions: Dict[int, List[TrenchPosition]] = {}
+_trench_balances: Dict[int, TrenchUserBalance] = {}
+_trench_order_id_counter = 0
+_trench_rate_limit: Dict[int, List[float]] = {}
+_trench_mock_prices: Dict[str, int] = {
+    "TRCH/ETH": 0.0025 * TRENCH_SCALE,
+    "TRCH/USDT": 5 * TRENCH_SCALE,
+    "ETH/USDT": 2000 * TRENCH_SCALE,
+}
+
+
+def _trench_next_order_id() -> str:
