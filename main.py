@@ -115,3 +115,42 @@ class TrenchNotAuthorized(TrenchBotError):
 
 # ---------------------------------------------------------------------------
 # Enums
+# ---------------------------------------------------------------------------
+
+
+class OrderSide(Enum):
+    BUY = "buy"
+    SELL = "sell"
+
+
+class OrderStatus(Enum):
+    PENDING = "pending"
+    FILLED = "filled"
+    CANCELLED = "cancelled"
+    PARTIAL = "partial"
+
+
+class OrderType(Enum):
+    MARKET = "market"
+    LIMIT = "limit"
+
+
+# ---------------------------------------------------------------------------
+# Data structures
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class TrenchOrder:
+    order_id: str
+    user_id: int
+    chat_id: int
+    pair: str
+    side: OrderSide
+    order_type: OrderType
+    amount_quote: int
+    amount_base: int
+    price_limit: Optional[int]
+    status: OrderStatus
+    created_at: float
+    updated_at: float
