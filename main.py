@@ -349,3 +349,42 @@ def trench_get_price(pair: str) -> int:
         raise TrenchInvalidPair(f"Unknown pair: {pair}")
     return _trench_mock_prices[pair]
 
+
+# ---------------------------------------------------------------------------
+# Formatting helpers
+# ---------------------------------------------------------------------------
+
+
+def _trench_fmt_wei(wei: int) -> str:
+    if wei >= TRENCH_SCALE:
+        return f"{wei / TRENCH_SCALE:.4f}"
+    return f"{wei / TRENCH_SCALE:.8f}"
+
+
+def _trench_fmt_order(o: TrenchOrder) -> str:
+    return (
+        f"Order {o.order_id}\n"
+        f"  Pair: {o.pair} | Side: {o.side.value} | Status: {o.status.value}\n"
+        f"  Amount: {_trench_fmt_wei(o.amount_quote)} quote\n"
+        f"  Filled: {o.filled_amount} base at {o.fill_price or 0} wei"
+    )
+
+
+def _trench_fmt_position(p: TrenchPosition) -> str:
+    return f"  {p.pair} {p.side.value} size={_trench_fmt_wei(p.size)} entry={_trench_fmt_wei(p.entry_price)}"
+
+
+def _trench_fmt_balance(b: TrenchUserBalance) -> str:
+    return f"Quote: {_trench_fmt_wei(b.quote_balance)} | Base: {_trench_fmt_wei(b.base_balance)}"
+
+
+# ---------------------------------------------------------------------------
+# Telegram API (HTTP)
+# ---------------------------------------------------------------------------
+
+try:
+    import urllib.request
+    import urllib.parse
+    import ssl
+    _TRENCH_SSL = ssl.create_default_context()
+except Exception:
