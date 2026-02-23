@@ -76,3 +76,42 @@ class TrenchOrderNotFound(TrenchBotError):
 class TrenchInsufficientBalance(TrenchBotError):
     pass
 
+
+class TrenchInvalidPair(TrenchBotError):
+    pass
+
+
+class TrenchMaxOrdersExceeded(TrenchBotError):
+    pass
+
+
+class TrenchZeroAmount(TrenchBotError):
+    pass
+
+
+class TrenchTelegramApiError(TrenchBotError):
+    pass
+
+
+class TrenchWebhookValidationError(TrenchBotError):
+    pass
+
+
+class TrenchOrderAlreadyFilled(TrenchBotError):
+    pass
+
+
+class TrenchOrderAlreadyCancelled(TrenchBotError):
+    pass
+
+
+class TrenchSlippageExceeded(TrenchBotError):
+    pass
+
+
+class TrenchNotAuthorized(TrenchBotError):
+    pass
+
+
+# ---------------------------------------------------------------------------
+# Enums
