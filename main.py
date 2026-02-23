@@ -37,3 +37,42 @@ TRENCH_LOG_LEVEL = os.environ.get("TRENCH_LOG_LEVEL", "INFO")
 # Constants (unique to TrenchBot)
 # ---------------------------------------------------------------------------
 
+TRENCH_VERSION = "1.0.0"
+TRENCH_CMD_START = "start"
+TRENCH_CMD_HELP = "help"
+TRENCH_CMD_PRICE = "price"
+TRENCH_CMD_ORDER = "order"
+TRENCH_CMD_BALANCE = "balance"
+TRENCH_CMD_POSITIONS = "positions"
+TRENCH_CMD_Trenchers = "trenchers"
+TRENCH_CMD_CANCEL = "cancel"
+TRENCH_CMD_HISTORY = "history"
+TRENCH_DECIMALS = 18
+TRENCH_SCALE = 10**18
+TRENCH_BPS = 10_000
+TRENCH_MAX_SLIPPAGE_BPS = 500
+TRENCH_NAMESPACE = hashlib.sha256(b"TrenchBot.TradingEngine").hexdigest()
+TRENCH_ORDER_NAMESPACE = hashlib.sha256(b"TrenchBot.OrderFlow").hexdigest()
+
+# ---------------------------------------------------------------------------
+# Custom errors (unique to this engine)
+# ---------------------------------------------------------------------------
+
+
+class TrenchBotError(Exception):
+    """Base for TrenchBot engine."""
+
+    pass
+
+
+class TrenchRateLimitExceeded(TrenchBotError):
+    pass
+
+
+class TrenchOrderNotFound(TrenchBotError):
+    pass
+
+
+class TrenchInsufficientBalance(TrenchBotError):
+    pass
+
