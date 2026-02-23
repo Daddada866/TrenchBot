@@ -193,3 +193,42 @@ _trench_mock_prices: Dict[str, int] = {
 
 
 def _trench_next_order_id() -> str:
+    global _trench_order_id_counter
+    _trench_order_id_counter += 1
+    return f"TRN_{TRENCH_NAMESPACE[:8]}_{_trench_order_id_counter}"
+
+
+def _trench_check_rate_limit(user_id: int) -> None:
+    now = time.time()
+    if user_id not in _trench_rate_limit:
+        _trench_rate_limit[user_id] = []
+    window = [t for t in _trench_rate_limit[user_id] if now - t < 60]
+    if len(window) >= TRENCH_RATE_LIMIT_PER_MIN:
+        raise TrenchRateLimitExceeded("Rate limit exceeded. Try again in a minute.")
+    window.append(now)
+    _trench_rate_limit[user_id] = window
+
+
+def _trench_get_or_create_balance(user_id: int) -> TrenchUserBalance:
+    if user_id not in _trench_balances:
+        _trench_balances[user_id] = TrenchUserBalance(
+            user_id=user_id,
+            quote_balance=1000 * TRENCH_SCALE,
+            base_balance=0,
+            updated_at=time.time(),
+        )
+    return _trench_balances[user_id]
+
+
+def _trench_get_mock_price(pair: str) -> int:
+    return _trench_mock_prices.get(pair, TRENCH_SCALE)
+
+
+def _trench_ensure_positions(user_id: int) -> None:
+    if user_id not in _trench_positions:
+        _trench_positions[user_id] = []
+
+
+# ---------------------------------------------------------------------------
+# Trading engine (simulated)
+# ---------------------------------------------------------------------------
