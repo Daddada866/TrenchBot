@@ -310,3 +310,42 @@ def _trench_fill_order(order: TrenchOrder) -> None:
         bal.quote_balance += order.amount_quote
         bal.base_balance -= order.amount_base
     bal.updated_at = time.time()
+
+
+def trench_cancel_order(user_id: int, order_id: str) -> TrenchOrder:
+    _trench_check_rate_limit(user_id)
+    if order_id not in _trench_orders:
+        raise TrenchOrderNotFound(f"Order {order_id} not found.")
+    order = _trench_orders[order_id]
+    if order.user_id != user_id:
+        raise TrenchNotAuthorized("Not your order.")
+    if order.status == OrderStatus.FILLED:
+        raise TrenchOrderAlreadyFilled("Order already filled.")
+    if order.status == OrderStatus.CANCELLED:
+        raise TrenchOrderAlreadyCancelled("Order already cancelled.")
+    order.status = OrderStatus.CANCELLED
+    order.updated_at = time.time()
+    return order
+
+
+def trench_get_orders(user_id: int, status: Optional[OrderStatus] = None) -> List[TrenchOrder]:
+    out = [o for o in _trench_orders.values() if o.user_id == user_id]
+    if status is not None:
+        out = [o for o in out if o.status == status]
+    return sorted(out, key=lambda o: -o.created_at)
+
+
+def trench_get_positions(user_id: int) -> List[TrenchPosition]:
+    _trench_ensure_positions(user_id)
+    return [p for p in _trench_positions[user_id] if p.size != 0]
+
+
+def trench_get_balance(user_id: int) -> TrenchUserBalance:
+    return _trench_get_or_create_balance(user_id)
+
+
+def trench_get_price(pair: str) -> int:
+    if pair not in _trench_mock_prices:
+        raise TrenchInvalidPair(f"Unknown pair: {pair}")
+    return _trench_mock_prices[pair]
+
