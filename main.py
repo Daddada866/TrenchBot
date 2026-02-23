@@ -232,3 +232,42 @@ def _trench_ensure_positions(user_id: int) -> None:
 # ---------------------------------------------------------------------------
 # Trading engine (simulated)
 # ---------------------------------------------------------------------------
+
+
+def trench_place_order(
+    user_id: int,
+    chat_id: int,
+    pair: str,
+    side: OrderSide,
+    amount_quote: int,
+    order_type: OrderType = OrderType.MARKET,
+    price_limit: Optional[int] = None,
+) -> TrenchOrder:
+    _trench_check_rate_limit(user_id)
+    if pair not in _trench_mock_prices:
+        raise TrenchInvalidPair(f"Unknown pair: {pair}")
+    user_orders = [o for o in _trench_orders.values() if o.user_id == user_id and o.status == OrderStatus.PENDING]
+    if len(user_orders) >= TRENCH_MAX_ORDERS_PER_USER:
+        raise TrenchMaxOrdersExceeded(f"Max {TRENCH_MAX_ORDERS_PER_USER} open orders.")
+    if amount_quote <= 0:
+        raise TrenchZeroAmount("Amount must be positive.")
+    price = _trench_get_mock_price(pair)
+    amount_base = (amount_quote * TRENCH_SCALE) // price
+    order = TrenchOrder(
+        order_id=_trench_next_order_id(),
+        user_id=user_id,
+        chat_id=chat_id,
+        pair=pair,
+        side=side,
+        order_type=order_type,
+        amount_quote=amount_quote,
+        amount_base=amount_base,
+        price_limit=price_limit,
+        status=OrderStatus.PENDING,
+        created_at=time.time(),
+        updated_at=time.time(),
+    )
+    _trench_orders[order.order_id] = order
+    if order_type == OrderType.MARKET:
+        _trench_fill_order(order)
+    return order
