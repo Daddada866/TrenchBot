@@ -622,3 +622,42 @@ def trench_webhook_handler(body: bytes, signature: Optional[str]) -> Tuple[int, 
     if "message" in data:
         trench_process_update(data)
     return 200, "OK"
+
+
+# ---------------------------------------------------------------------------
+# Additional commands: signals, stats, admin
+# ---------------------------------------------------------------------------
+
+TRENCH_CMD_SIGNALS = "signals"
+TRENCH_CMD_STATS = "stats"
+TRENCH_CMD_PAIRS = "pairs"
+TRENCH_CMD_ABOUT = "about"
+TRENCH_ADMIN_IDS = os.environ.get("TRENCH_ADMIN_IDS", "0").split(",")
+TRENCH_ADMIN_IDS_SET = set(int(x.strip()) for x in TRENCH_ADMIN_IDS if x.strip().isdigit())
+
+
+def trench_handle_signals(chat_id: int, user_id: int, _args: List[str]) -> str:
+    return (
+        "Signal channel: " + TRENCH_SIGNAL_CHANNEL_ID + "\n"
+        "Signals are broadcast by the engine when configured. TimeToTrade web shows live feed."
+    )
+
+
+def trench_handle_stats(chat_id: int, user_id: int, _args: List[str]) -> str:
+    total_orders = len(_trench_orders)
+    pending = len([o for o in _trench_orders.values() if o.status == OrderStatus.PENDING])
+    filled = len([o for o in _trench_orders.values() if o.status == OrderStatus.FILLED])
+    return f"Engine stats: total_orders={total_orders} pending={pending} filled={filled}"
+
+
+def trench_handle_pairs(chat_id: int, user_id: int, _args: List[str]) -> str:
+    pairs = list(_trench_mock_prices.keys())
+    return "Pairs: " + ", ".join(pairs)
+
+
+def trench_handle_about(chat_id: int, user_id: int, _args: List[str]) -> str:
+    return (
+        f"TrenchBot v{TRENCH_VERSION}\n"
+        f"Trenchers NFT: {TRENCHERS_NFT_ADDRESS}\n"
+        f"Treasury: {TRENCH_TREASURY_ADDRESS}\n"
+        "TimeToTrade web for full trading UI."
