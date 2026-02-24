@@ -388,3 +388,42 @@ try:
     import ssl
     _TRENCH_SSL = ssl.create_default_context()
 except Exception:
+    _TRENCH_SSL = None
+
+
+def _trench_telegram_request(method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    url = f"{TRENCH_API_BASE}{TRENCH_BOT_TOKEN}/{method}"
+    data = json.dumps(params or {}).encode("utf-8") if params else b""
+    req = urllib.request.Request(url, data=data, method="POST" if data else "GET")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=15, context=_TRENCH_SSL) as resp:
+            out = json.loads(resp.read().decode())
+    except Exception as e:
+        raise TrenchTelegramApiError(str(e))
+    if not out.get("ok"):
+        raise TrenchTelegramApiError(out.get("description", "Unknown Telegram error"))
+    return out
+
+
+def trench_send_message(chat_id: int, text: str, parse_mode: Optional[str] = None) -> None:
+    params = {"chat_id": chat_id, "text": text[:4096]}
+    if parse_mode:
+        params["parse_mode"] = parse_mode
+    _trench_telegram_request("sendMessage", params)
+
+
+def trench_send_message_reply(chat_id: int, text: str, reply_to_message_id: int) -> None:
+    _trench_telegram_request("sendMessage", {"chat_id": chat_id, "text": text[:4096], "reply_to_message_id": reply_to_message_id})
+
+
+# ---------------------------------------------------------------------------
+# Command handlers
+# ---------------------------------------------------------------------------
+
+
+def trench_handle_start(chat_id: int, user_id: int, _args: List[str]) -> str:
+    return (
+        f"Welcome to TrenchBot v{TRENCH_VERSION}.\n"
+        "Commands: /price, /order, /balance, /positions, /cancel, /history, /trenchers, /help"
+    )
