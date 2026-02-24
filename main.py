@@ -466,3 +466,42 @@ def trench_handle_order(chat_id: int, user_id: int, args: List[str]) -> str:
         order = trench_place_order(user_id, chat_id, pair, side, amount_quote)
         return f"Order placed: {order.order_id}\n" + _trench_fmt_order(order)
     except (TrenchInvalidPair, TrenchMaxOrdersExceeded, TrenchZeroAmount, TrenchRateLimitExceeded) as e:
+        return str(e)
+
+
+def trench_handle_balance(chat_id: int, user_id: int, _args: List[str]) -> str:
+    try:
+        b = trench_get_balance(user_id)
+        return _trench_fmt_balance(b)
+    except Exception as e:
+        return str(e)
+
+
+def trench_handle_positions(chat_id: int, user_id: int, _args: List[str]) -> str:
+    try:
+        pos_list = trench_get_positions(user_id)
+        if not pos_list:
+            return "No open positions."
+        return "Positions:\n" + "\n".join(_trench_fmt_position(p) for p in pos_list)
+    except Exception as e:
+        return str(e)
+
+
+def trench_handle_cancel(chat_id: int, user_id: int, args: List[str]) -> str:
+    if not args:
+        return "Usage: /cancel <order_id>"
+    try:
+        order = trench_cancel_order(user_id, args[0])
+        return f"Cancelled: {order.order_id}"
+    except (TrenchOrderNotFound, TrenchOrderAlreadyFilled, TrenchOrderAlreadyCancelled, TrenchNotAuthorized) as e:
+        return str(e)
+
+
+def trench_handle_history(chat_id: int, user_id: int, args: List[str]) -> str:
+    status = None
+    if args and args[0].lower() == "filled":
+        status = OrderStatus.FILLED
+    elif args and args[0].lower() == "pending":
+        status = OrderStatus.PENDING
+    orders = trench_get_orders(user_id, status=status)[:10]
+    if not orders:
