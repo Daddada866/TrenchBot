@@ -778,3 +778,42 @@ def trench_export_state() -> Dict[str, Any]:
             "created_at": o.created_at,
         })
     balances_ser = {}
+    for uid, b in _trench_balances.items():
+        balances_ser[str(uid)] = {"quote": b.quote_balance, "base": b.base_balance}
+    positions_ser = {}
+    for uid, plist in _trench_positions.items():
+        positions_ser[str(uid)] = [
+            {"pair": p.pair, "side": p.side.value, "size": p.size, "entry_price": p.entry_price}
+            for p in plist if p.size != 0
+        ]
+    return {
+        "orders": orders_ser,
+        "balances": balances_ser,
+        "positions": positions_ser,
+        "order_id_counter": _trench_order_id_counter,
+    }
+
+
+def trench_import_state(data: Dict[str, Any]) -> None:
+    global _trench_order_id_counter
+    _trench_orders.clear()
+    _trench_balances.clear()
+    _trench_positions.clear()
+    _trench_limit_orders.clear()
+    for o in data.get("orders", []):
+        side = OrderSide(o["side"]) if isinstance(o["side"], str) else OrderSide.BUY
+        status = OrderStatus(o["status"]) if isinstance(o["status"], str) else OrderStatus.PENDING
+        order = TrenchOrder(
+            order_id=o["order_id"],
+            user_id=o["user_id"],
+            chat_id=0,
+            pair=o.get("pair", TRENCH_DEFAULT_PAIR),
+            side=side,
+            order_type=OrderType.MARKET,
+            amount_quote=o.get("amount_quote", 0),
+            amount_base=o.get("amount_base", 0),
+            price_limit=None,
+            status=status,
+            created_at=o.get("created_at", time.time()),
+            updated_at=time.time(),
+        )
