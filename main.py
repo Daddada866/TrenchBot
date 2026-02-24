@@ -817,3 +817,42 @@ def trench_import_state(data: Dict[str, Any]) -> None:
             created_at=o.get("created_at", time.time()),
             updated_at=time.time(),
         )
+        _trench_orders[order.order_id] = order
+        if status == OrderStatus.PENDING:
+            _trench_limit_orders.append(order)
+    for uid_str, bal in data.get("balances", {}).items():
+        uid = int(uid_str)
+        _trench_balances[uid] = TrenchUserBalance(
+            user_id=uid,
+            quote_balance=bal.get("quote", 0),
+            base_balance=bal.get("base", 0),
+            updated_at=time.time(),
+        )
+    for uid_str, plist in data.get("positions", {}).items():
+        uid = int(uid_str)
+        _trench_positions[uid] = []
+        for p in plist:
+            side = OrderSide(p["side"]) if isinstance(p["side"], str) else OrderSide.BUY
+            _trench_positions[uid].append(
+                TrenchPosition(
+                    user_id=uid,
+                    pair=p.get("pair", TRENCH_DEFAULT_PAIR),
+                    side=side,
+                    size=p.get("size", 0),
+                    entry_price=p.get("entry_price", 0),
+                    updated_at=time.time(),
+                )
+            )
+    _trench_order_id_counter = data.get("order_id_counter", 0)
+
+
+# ---------------------------------------------------------------------------
+# CLI entry
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    trench_run_poll()
+
+
+# ---------------------------------------------------------------------------
+# Documentation and reference (no executable code below; for integrators)
