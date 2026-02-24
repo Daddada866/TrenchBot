@@ -544,3 +544,42 @@ def trench_dispatch(chat_id: int, user_id: int, cmd: str, args: List[str]) -> st
 def trench_parse_update(update: Dict[str, Any]) -> Optional[Tuple[int, int, str, List[str]]]:
     msg = update.get("message")
     if not msg:
+        return None
+    chat_id = msg.get("chat", {}).get("id")
+    from_user = msg.get("from") or {}
+    user_id = from_user.get("id")
+    text = (msg.get("text") or "").strip()
+    if not text or not text.startswith("/"):
+        return None
+    parts = text.split()
+    cmd = parts[0][1:].split("@")[0]
+    args = parts[1:]
+    return (chat_id, user_id, cmd, args)
+
+
+def trench_process_update(update: Dict[str, Any]) -> None:
+    parsed = trench_parse_update(update)
+    if not parsed:
+        return
+    chat_id, user_id, cmd, args = parsed
+    try:
+        reply = trench_dispatch(chat_id, user_id, cmd, args)
+        trench_send_message(chat_id, reply)
+    except TrenchRateLimitExceeded:
+        trench_send_message(chat_id, "Rate limit exceeded. Try again later.")
+    except Exception as e:
+        logging.exception("TrenchBot handler error")
+        trench_send_message(chat_id, f"Error: {e}")
+
+
+def trench_get_updates(offset: Optional[int] = None) -> List[Dict[str, Any]]:
+    params = {"timeout": 30}
+    if offset is not None:
+        params["offset"] = offset
+    out = _trench_telegram_request("getUpdates", params)
+    return out.get("result", [])
+
+
+def trench_run_poll() -> None:
+    logging.basicConfig(level=getattr(logging, TRENCH_LOG_LEVEL, logging.INFO))
+    logger = logging.getLogger("TrenchBot")
