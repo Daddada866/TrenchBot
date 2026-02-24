@@ -739,3 +739,42 @@ def trench_place_limit_order(
         updated_at=time.time(),
     )
     _trench_orders[order.order_id] = order
+    _trench_limit_orders.append(order)
+    return order
+
+
+def trench_try_fill_limit_orders() -> int:
+    filled = 0
+    market_price = _trench_get_mock_price(TRENCH_DEFAULT_PAIR)
+    for order in list(_trench_limit_orders):
+        if order.status != OrderStatus.PENDING:
+            continue
+        if order.side == OrderSide.BUY and market_price <= (order.price_limit or 0):
+            _trench_fill_order(order)
+            filled += 1
+        elif order.side == OrderSide.SELL and market_price >= (order.price_limit or 0):
+            _trench_fill_order(order)
+            filled += 1
+    _trench_limit_orders[:] = [o for o in _trench_limit_orders if o.status == OrderStatus.PENDING]
+    return filled
+
+
+# ---------------------------------------------------------------------------
+# Persistence stubs (for DB integration later)
+# ---------------------------------------------------------------------------
+
+
+def trench_export_state() -> Dict[str, Any]:
+    orders_ser = []
+    for o in _trench_orders.values():
+        orders_ser.append({
+            "order_id": o.order_id,
+            "user_id": o.user_id,
+            "pair": o.pair,
+            "side": o.side.value,
+            "status": o.status.value,
+            "amount_quote": o.amount_quote,
+            "amount_base": o.amount_base,
+            "created_at": o.created_at,
+        })
+    balances_ser = {}
