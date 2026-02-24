@@ -661,3 +661,42 @@ def trench_handle_about(chat_id: int, user_id: int, _args: List[str]) -> str:
         f"Trenchers NFT: {TRENCHERS_NFT_ADDRESS}\n"
         f"Treasury: {TRENCH_TREASURY_ADDRESS}\n"
         "TimeToTrade web for full trading UI."
+    )
+
+
+_TRENCH_HANDLERS[TRENCH_CMD_SIGNALS] = trench_handle_signals
+_TRENCH_HANDLERS[TRENCH_CMD_STATS] = trench_handle_stats
+_TRENCH_HANDLERS[TRENCH_CMD_PAIRS] = trench_handle_pairs
+_TRENCH_HANDLERS[TRENCH_CMD_ABOUT] = trench_handle_about
+
+
+# ---------------------------------------------------------------------------
+# Config validation
+# ---------------------------------------------------------------------------
+
+
+def trench_validate_config() -> List[str]:
+    errors = []
+    if not TRENCH_BOT_TOKEN or len(TRENCH_BOT_TOKEN) < 10:
+        errors.append("TRENCH_BOT_TOKEN should be set to a valid Telegram bot token")
+    if TRENCH_WEBHOOK_PORT < 1 or TRENCH_WEBHOOK_PORT > 65535:
+        errors.append("TRENCH_WEBHOOK_PORT must be 1-65535")
+    if TRENCH_MAX_ORDERS_PER_USER < 1 or TRENCH_MAX_ORDERS_PER_USER > 500:
+        errors.append("TRENCH_MAX_ORDERS_PER_USER should be 1-500")
+    if TRENCH_RATE_LIMIT_PER_MIN < 1:
+        errors.append("TRENCH_RATE_LIMIT_PER_MIN must be >= 1")
+    return errors
+
+
+def trench_config_summary() -> Dict[str, Any]:
+    return {
+        "version": TRENCH_VERSION,
+        "webhook_port": TRENCH_WEBHOOK_PORT,
+        "default_pair": TRENCH_DEFAULT_PAIR,
+        "max_orders_per_user": TRENCH_MAX_ORDERS_PER_USER,
+        "rate_limit_per_min": TRENCH_RATE_LIMIT_PER_MIN,
+        "trenchers_nft": TRENCHERS_NFT_ADDRESS,
+        "treasury": TRENCH_TREASURY_ADDRESS,
+    }
+
+
