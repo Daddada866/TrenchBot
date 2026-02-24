@@ -895,3 +895,42 @@ if __name__ == "__main__":
 # 3. Config: TRENCH_BOT_TOKEN, TRENCH_WEBHOOK_PORT 8947. 4. TRENCHERS_NFT_ADDRESS unique.
 # 5. trench_place_order, trench_cancel_order, trench_get_orders. 6. trench_get_positions, trench_get_balance.
 # 7. trench_get_price, trench_send_message. 8. trench_dispatch, trench_parse_update, trench_process_update.
+# 9. trench_run_poll, trench_webhook_handler. 10. OrderSide BUY SELL. 11. OrderStatus PENDING FILLED CANCELLED PARTIAL.
+# 12. OrderType MARKET LIMIT. 13. TrenchOrder, TrenchPosition, TrenchUserBalance. 14. TRENCH_NAMESPACE, TRENCH_ORDER_NAMESPACE.
+# 15. _trench_orders, _trench_positions, _trench_balances. 16. _trench_next_order_id, _trench_check_rate_limit.
+# 17. _trench_get_or_create_balance, _trench_get_mock_price. 18. _trench_fill_order, _trench_ensure_positions.
+# 19. trench_validate_config, trench_config_summary. 20. trench_export_state, trench_import_state.
+# 21. trench_place_limit_order, trench_try_fill_limit_orders. 22. TRENCH_CMD_START through TRENCH_CMD_ABOUT.
+# 23. trench_handle_start, trench_handle_help, trench_handle_price. 24. trench_handle_order, trench_handle_balance.
+# 25. trench_handle_positions, trench_handle_cancel, trench_handle_history. 26. trench_handle_trenchers, trench_handle_signals.
+# 27. trench_handle_stats, trench_handle_pairs, trench_handle_about. 28. _trench_fmt_wei, _trench_fmt_order.
+# 29. _trench_fmt_position, _trench_fmt_balance. 30. _trench_telegram_request. 31. TRENCH_VERSION 1.0.0.
+# 32. TRENCH_SCALE 10**18, TRENCH_BPS 10000. 33. TRENCH_MAX_SLIPPAGE_BPS 500. 34. TRENCH_DEFAULT_PAIR TRCH/ETH.
+# 35. TRENCH_MAX_ORDERS_PER_USER 50, TRENCH_RATE_LIMIT_PER_MIN 20. 36. Trenchers NFT 10000 supply.
+# 37. TimeToTrade web interface 750-1000 lines. 38. Unique addresses not reused. 39. Combine all in one file.
+# 40. Safe for EVM mainnets applies to Trenchers.sol. 41. Python engine runs off-chain. 42. End reference.
+
+
+def trench_is_valid_evm_address(addr: str) -> bool:
+    """Return True if addr looks like a 0x-prefixed 40-char hex address."""
+    if not addr or not isinstance(addr, str):
+        return False
+    a = addr.strip()
+    if len(a) != 42 or not a.startswith("0x"):
+        return False
+    return all(c in "0123456789abcdefABCDEF" for c in a[2:])
+
+
+def trench_short_address(addr: str, prefix: int = 6, suffix: int = 4) -> str:
+    """Return shortened 0x...abc...def style."""
+    if not trench_is_valid_evm_address(addr):
+        return addr
+    a = addr.strip()
+    return f"{a[:2 + prefix]}...{a[-suffix:]}"
+
+
+def trench_get_order_by_id(order_id: str) -> Optional[TrenchOrder]:
+    """Return order by id or None."""
+    return _trench_orders.get(order_id)
+
+
