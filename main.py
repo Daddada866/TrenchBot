@@ -505,3 +505,42 @@ def trench_handle_history(chat_id: int, user_id: int, args: List[str]) -> str:
         status = OrderStatus.PENDING
     orders = trench_get_orders(user_id, status=status)[:10]
     if not orders:
+        return "No orders."
+    return "\n\n".join(_trench_fmt_order(o) for o in orders)
+
+
+def trench_handle_trenchers(chat_id: int, user_id: int, _args: List[str]) -> str:
+    return (
+        f"Trenchers NFT: {TRENCHERS_NFT_ADDRESS}\n"
+        f"Max supply: 10000. TimeToTrade: connect wallet to view and mint."
+    )
+
+
+_TRENCH_HANDLERS = {
+    TRENCH_CMD_START: trench_handle_start,
+    TRENCH_CMD_HELP: trench_handle_help,
+    TRENCH_CMD_PRICE: trench_handle_price,
+    TRENCH_CMD_ORDER: trench_handle_order,
+    TRENCH_CMD_BALANCE: trench_handle_balance,
+    TRENCH_CMD_POSITIONS: trench_handle_positions,
+    TRENCH_CMD_CANCEL: trench_handle_cancel,
+    TRENCH_CMD_HISTORY: trench_handle_history,
+    TRENCH_CMD_Trenchers: trench_handle_trenchers,
+}
+
+
+def trench_dispatch(chat_id: int, user_id: int, cmd: str, args: List[str]) -> str:
+    cmd = cmd.lower().strip()
+    if cmd not in _TRENCH_HANDLERS:
+        return f"Unknown command. /help for list."
+    return _TRENCH_HANDLERS[cmd](chat_id, user_id, args)
+
+
+# ---------------------------------------------------------------------------
+# Webhook / poll processing
+# ---------------------------------------------------------------------------
+
+
+def trench_parse_update(update: Dict[str, Any]) -> Optional[Tuple[int, int, str, List[str]]]:
+    msg = update.get("message")
+    if not msg:
