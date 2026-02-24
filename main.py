@@ -583,3 +583,42 @@ def trench_get_updates(offset: Optional[int] = None) -> List[Dict[str, Any]]:
 def trench_run_poll() -> None:
     logging.basicConfig(level=getattr(logging, TRENCH_LOG_LEVEL, logging.INFO))
     logger = logging.getLogger("TrenchBot")
+    logger.info("TrenchBot poll loop starting")
+    offset = None
+    while True:
+        try:
+            updates = trench_get_updates(offset)
+            for u in updates:
+                offset = u.get("update_id", 0) + 1
+                trench_process_update(u)
+        except TrenchTelegramApiError as e:
+            logger.warning("Telegram API error: %s", e)
+        except Exception as e:
+            logger.exception("Poll error: %s", e)
+        time.sleep(TRENCH_POLL_INTERVAL_SEC)
+
+
+# ---------------------------------------------------------------------------
+# Webhook server (optional)
+# ---------------------------------------------------------------------------
+
+
+def trench_validate_webhook_secret(body: bytes, signature: str) -> bool:
+    expected = "sha256=" + hmac.new(
+        TRENCH_WEBHOOK_SECRET.encode(),
+        body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+def trench_webhook_handler(body: bytes, signature: Optional[str]) -> Tuple[int, str]:
+    if signature and not trench_validate_webhook_secret(body, signature):
+        return 403, "Invalid signature"
+    try:
+        data = json.loads(body.decode())
+    except Exception:
+        return 400, "Invalid JSON"
+    if "message" in data:
+        trench_process_update(data)
+    return 200, "OK"
