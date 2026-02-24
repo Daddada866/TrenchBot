@@ -700,3 +700,42 @@ def trench_config_summary() -> Dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# Limit order simulation (extended engine)
+# ---------------------------------------------------------------------------
+
+_trench_limit_orders: List[TrenchOrder] = []
+
+
+def trench_place_limit_order(
+    user_id: int,
+    chat_id: int,
+    pair: str,
+    side: OrderSide,
+    amount_quote: int,
+    price_limit: int,
+) -> TrenchOrder:
+    _trench_check_rate_limit(user_id)
+    if pair not in _trench_mock_prices:
+        raise TrenchInvalidPair(f"Unknown pair: {pair}")
+    user_orders = [o for o in _trench_orders.values() if o.user_id == user_id and o.status == OrderStatus.PENDING]
+    if len(user_orders) >= TRENCH_MAX_ORDERS_PER_USER:
+        raise TrenchMaxOrdersExceeded(f"Max {TRENCH_MAX_ORDERS_PER_USER} open orders.")
+    if amount_quote <= 0 or price_limit <= 0:
+        raise TrenchZeroAmount("Amount and price must be positive.")
+    amount_base = (amount_quote * TRENCH_SCALE) // price_limit
+    order = TrenchOrder(
+        order_id=_trench_next_order_id(),
+        user_id=user_id,
+        chat_id=chat_id,
+        pair=pair,
+        side=side,
+        order_type=OrderType.LIMIT,
+        amount_quote=amount_quote,
+        amount_base=amount_base,
+        price_limit=price_limit,
+        status=OrderStatus.PENDING,
+        created_at=time.time(),
+        updated_at=time.time(),
+    )
+    _trench_orders[order.order_id] = order
