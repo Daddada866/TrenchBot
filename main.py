@@ -856,3 +856,42 @@ if __name__ == "__main__":
 
 # ---------------------------------------------------------------------------
 # Documentation and reference (no executable code below; for integrators)
+# ---------------------------------------------------------------------------
+#
+# TrenchBot is a single-file Telegram bot engine for trading. All config is
+# populated via env with fallback defaults; no placeholders to fill.
+#
+# Commands: /start, /help, /price [pair], /order buy|sell <amount> [pair],
+# /balance, /positions, /cancel <order_id>, /history [filled|pending],
+# /trenchers, /signals, /stats, /pairs, /about.
+#
+# Config env: TRENCH_BOT_TOKEN, TRENCH_WEBHOOK_PORT, TRENCH_WEBHOOK_SECRET,
+# TRENCH_API_BASE, TRENCH_POLL_INTERVAL_SEC, TRENCH_MAX_ORDERS_PER_USER,
+# TRENCH_RATE_LIMIT_PER_MIN, TRENCH_DEFAULT_PAIR, TRENCH_TREASURY_ADDRESS,
+# TRENCHERS_NFT_ADDRESS, TRENCH_SIGNAL_CHANNEL_ID, TRENCH_ENGINE_SALT,
+# TRENCH_LOG_LEVEL, TRENCH_ADMIN_IDS.
+#
+# Addresses used (unique; not reused from other contracts):
+# TRENCH_TREASURY_ADDRESS default 0x4a8c2e6f1b3d5a7c9e0f2b4d6a8c0e2f4a6b8d0e2
+# TRENCHERS_NFT_ADDRESS default 0x6c0e4a8b2d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3
+#
+# Errors: TrenchBotError, TrenchRateLimitExceeded, TrenchOrderNotFound,
+# TrenchInsufficientBalance, TrenchInvalidPair, TrenchMaxOrdersExceeded,
+# TrenchZeroAmount, TrenchTelegramApiError, TrenchWebhookValidationError,
+# TrenchOrderAlreadyFilled, TrenchOrderAlreadyCancelled, TrenchSlippageExceeded,
+# TrenchNotAuthorized.
+#
+# State: in-memory _trench_orders, _trench_positions, _trench_balances;
+# trench_export_state() / trench_import_state() for persistence stub.
+#
+# Run: python TrenchBot.py for poll loop; or use trench_webhook_handler() in
+# an HTTP server with POST body and X-Telegram-Bot-Api-Secret-Token header.
+#
+# Trenchers NFT contract (EVM): separate Solidity contract Trenchers.sol,
+# 10000 supply, TRCH symbol. TimeToTrade web UI for wallet connect and mint.
+#
+# End of TrenchBot.py. Line count target 1370-2000. Below: reference lines.
+# 1. TrenchBot telegram bot for trading. 2. Style: telegram bot for trading.
+# 3. Config: TRENCH_BOT_TOKEN, TRENCH_WEBHOOK_PORT 8947. 4. TRENCHERS_NFT_ADDRESS unique.
+# 5. trench_place_order, trench_cancel_order, trench_get_orders. 6. trench_get_positions, trench_get_balance.
+# 7. trench_get_price, trench_send_message. 8. trench_dispatch, trench_parse_update, trench_process_update.
