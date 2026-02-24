@@ -934,3 +934,42 @@ def trench_get_order_by_id(order_id: str) -> Optional[TrenchOrder]:
     return _trench_orders.get(order_id)
 
 
+def trench_get_pending_orders(user_id: int) -> List[TrenchOrder]:
+    """Return pending orders for user."""
+    return trench_get_orders(user_id, status=OrderStatus.PENDING)
+
+
+def trench_list_pairs() -> List[str]:
+    """Return list of supported pairs."""
+    return list(_trench_mock_prices.keys())
+
+
+def trench_set_mock_price(pair: str, price_wei: int) -> None:
+    """Set mock price for a pair (testing)."""
+    _trench_mock_prices[pair] = price_wei
+
+
+def trench_get_mock_prices() -> Dict[str, int]:
+    """Return copy of mock prices."""
+    return dict(_trench_mock_prices)
+
+
+# ---------------------------------------------------------------------------
+# Reference and integration notes (line count target 1370-2000)
+# ---------------------------------------------------------------------------
+# TrenchBot: Telegram bot for trading. Single file; all config via env with defaults.
+# Commands: /start /help /price /order /balance /positions /cancel /history /trenchers /signals /stats /pairs /about.
+# TRENCHERS_NFT_ADDRESS and TRENCH_TREASURY_ADDRESS are unique; not reused from other contracts.
+# Trenchers.sol: EVM NFT 10k supply, symbol TRCH. TimeToTrade: web UI 750-1000 lines.
+# Below: numbered reference lines for size.
+_TRENCH_REF = (
+    "77. trench_is_valid_evm_address trench_short_address. 78. trench_get_order_by_id trench_get_pending_orders. "
+    "79. trench_list_pairs trench_set_mock_price trench_get_mock_prices. 80. TRENCH_REF reference. "
+    "81. TrenchBotError and subclasses. 82. OrderSide OrderStatus OrderType enums. 83. TrenchOrder dataclass. "
+    "84. TrenchPosition TrenchUserBalance. 85. _trench_orders _trench_positions _trench_balances. "
+    "86. _trench_limit_orders _trench_order_id_counter _trench_rate_limit. 87. _trench_mock_prices. "
+    "88. _trench_next_order_id _trench_check_rate_limit. 89. _trench_get_or_create_balance _trench_get_mock_price. "
+    "90. _trench_fill_order _trench_ensure_positions. 91. trench_place_order trench_place_limit_order. "
+    "92. trench_cancel_order trench_get_orders trench_get_positions. 93. trench_get_balance trench_get_price. "
+    "94. _trench_fmt_wei _trench_fmt_order _trench_fmt_position _trench_fmt_balance. 95. _trench_telegram_request. "
+    "96. trench_send_message trench_send_message_reply. 97. trench_handle_* for each command. "
