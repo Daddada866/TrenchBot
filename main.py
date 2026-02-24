@@ -427,3 +427,42 @@ def trench_handle_start(chat_id: int, user_id: int, _args: List[str]) -> str:
         f"Welcome to TrenchBot v{TRENCH_VERSION}.\n"
         "Commands: /price, /order, /balance, /positions, /cancel, /history, /trenchers, /help"
     )
+
+
+def trench_handle_help(chat_id: int, user_id: int, _args: List[str]) -> str:
+    return (
+        "/price [pair] - Get price (default " + TRENCH_DEFAULT_PAIR + ")\n"
+        "/order buy|sell <amount> [pair] - Place market order\n"
+        "/balance - Show simulated balance\n"
+        "/positions - Show open positions\n"
+        "/cancel <order_id> - Cancel order\n"
+        "/history - Recent orders\n"
+        "/trenchers - Trenchers NFT contract info"
+    )
+
+
+def trench_handle_price(chat_id: int, user_id: int, args: List[str]) -> str:
+    pair = args[0] if args else TRENCH_DEFAULT_PAIR
+    try:
+        price = trench_get_price(pair)
+        return f"{pair} = {_trench_fmt_wei(price)}"
+    except TrenchInvalidPair as e:
+        return str(e)
+
+
+def trench_handle_order(chat_id: int, user_id: int, args: List[str]) -> str:
+    if len(args) < 2:
+        return "Usage: /order buy|sell <amount> [pair]"
+    side_str = args[0].lower()
+    if side_str not in ("buy", "sell"):
+        return "Side must be buy or sell"
+    side = OrderSide.BUY if side_str == "buy" else OrderSide.SELL
+    try:
+        amount_quote = int(float(args[1]) * TRENCH_SCALE)
+    except ValueError:
+        return "Amount must be a number"
+    pair = args[2] if len(args) > 2 else TRENCH_DEFAULT_PAIR
+    try:
+        order = trench_place_order(user_id, chat_id, pair, side, amount_quote)
+        return f"Order placed: {order.order_id}\n" + _trench_fmt_order(order)
+    except (TrenchInvalidPair, TrenchMaxOrdersExceeded, TrenchZeroAmount, TrenchRateLimitExceeded) as e:
